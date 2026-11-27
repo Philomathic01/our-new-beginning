@@ -1,0 +1,1 @@
+Optional photos go here. Set their paths in CONFIG in index.html.
