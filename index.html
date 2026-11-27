@@ -53,8 +53,92 @@
 <section class="scene" id="s8"><div class="eyebrow">Chapter 08 · The grand finale</div><h2>Here’s to <em>our beginning.</em></h2><div class="heart-area"><canvas id="heart" aria-label="Rotating three-dimensional gemstone heart"></canvas></div><div class="name-final">My Future Wife ♡</div><p id="finalText">In a world full of temporary things, I hope our story is something that lasts.</p><div class="final-sign">With warmth, your future husband, <span id="finalFrom">Kishan</span></div><div class="ornament">♡</div><button class="btn" id="finalButton">Make a wish with me ✨</button><div id="finalVoice"></div><div><button class="text-btn replay" id="replay">Replay our beginning ↺</button></div></section>
 </main><footer class="footer">Made with care · Kishan &amp; Shivani</footer></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Memory"><div class="modal-inner"><div id="modalArt"></div><button class="round" id="closeModal" aria-label="Close memory">×</button><h3 id="modalTitle"></h3><p id="modalText"></p></div></div><div class="toast" id="toast" role="status"></div>
-<script src="audio-config-v3.js"></script>
-<script src="audio-v3.js"></script>
+<script src="audio-config-v3.js?v=4"></script>
+<script>
+// Edit this file to customize songs and voice notes.
+// Use relative paths, e.g. songs/my_song.mp3. Start is in seconds.
+// Empty file means silence. The finale is reserved for the final heart screen.
+// Voice enabled: false hides that voice card. MP3 and M4A are supported by most phones.
+const DEFAULT_AUDIO_SETTINGS = {
+  musicVolume: 0.38,
+  fallback: "",
+  songs: [
+    { file: "", start: 0, volume: 0.38 }, // 1. Welcome
+    { file: "", start: 0, volume: 0.38 }, // 2. Wedding countdown
+    { file: "", start: 0, volume: 0.38 }, // 3. Secret envelope
+    { file: "", start: 0, volume: 0.38 }, // 4. First meeting
+    { file: "", start: 0, volume: 0.38 }, // 5. Friendship question
+    { file: "", start: 0, volume: 0.38 }, // 6. Heart to heart
+    { file: "", start: 0, volume: 0.38 }, // 7. Promises
+    { file: "", start: 0, volume: 0.38 }, // 8. Future memories and bucket list
+    { file: "", start: 0, volume: 0.38 }, // 9. Love letter and poetry
+    { file: "songs/chapter10.mp3", start: 0, volume: 0.50 }, // 10. Grand finale
+  ],
+  voices: [
+    { mount: "welcomeVoice", file: "voice/welcome.m4a", title: "A little hello from Kishan", enabled: true },
+    { mount: "envelopeVoice", file: "voice/secret_letter.m4a", title: "A secret message inside the letter", enabled: true },
+    { mount: "meetingVoice", file: "voice/first_meeting.m4a", title: "What I felt when I first saw you", enabled: true },
+    { mount: "friendshipVoice", file: "voice/friendship.m4a", title: "A little wish for our bond", enabled: true },
+    { mount: "promisesVoice", file: "voice/promises.m4a", title: "My promises, in my own words", enabled: true },
+    { mount: "poetryVoice", file: "voice/poetry.m4a", title: "A few lines, in my own voice", enabled: true },
+    { mount: "finalVoice", file: "voice/final_message.m4a", title: "One last secret for my future wife", enabled: true },
+  ]
+};
+
+const SITE_AUDIO_SETTINGS = typeof AUDIO_SETTINGS !== "undefined" && Array.isArray(AUDIO_SETTINGS.songs) && Array.isArray(AUDIO_SETTINGS.voices) ? AUDIO_SETTINGS : DEFAULT_AUDIO_SETTINGS;
+</script>
+<script>
+/* Playback is unlocked only by an intentional visitor tap. */
+let musicPreferenceSet=false, musicEnabled=false, musicPlayer=null, musicGeneration=0, fadeFrame=0;
+let voicePlayer=null, activeVoice=null, voiceGeneration=0;
+const voiceCards=[];
+const chapterIndex=()=>step===0?(weddingPhase?1:0):step+1;
+function updateProgress(){[...$('track').children].forEach((node,i)=>node.classList.toggle('done',i<=chapterIndex()));}
+function clampVolume(v){return Math.max(0,Math.min(1,Number.isFinite(+v)?+v:0.38));}
+function updateMusicButton(){const b=$('music');b.setAttribute('aria-pressed',String(musicEnabled));b.setAttribute('aria-label',musicEnabled?'Turn music off':'Turn music on');b.title=musicEnabled?'Music on — tap to mute':'Music off — tap to play';b.textContent=musicEnabled?'♪':'♫';}
+function enableMusic(){musicEnabled=true;updateMusicButton();}
+function stopMusic(){musicGeneration++;cancelAnimationFrame(fadeFrame);if(musicPlayer){musicPlayer.pause();musicPlayer.removeAttribute('src');musicPlayer.load();musicPlayer=null;}}
+function fadeIn(player,target){cancelAnimationFrame(fadeFrame);const start=performance.now();function frame(now){if(player!==musicPlayer||player.paused)return;player.volume=target*Math.min(1,(now-start)/650);if(now-start<650)fadeFrame=requestAnimationFrame(frame);}fadeFrame=requestAnimationFrame(frame);}
+// Explicit scene routing; no shared fallback. Final track is never allowed on another scene.
+function getMusicConfig(){
+ const final = step===8 && $('s8').classList.contains('active');
+ const cfg=SITE_AUDIO_SETTINGS.songs[chapterIndex()]||{};
+ const finale=SITE_AUDIO_SETTINGS.songs[9]?.file;
+ if(final)return SITE_AUDIO_SETTINGS.songs[9]||{};
+ if(!cfg.file || cfg.file===finale || /(?:^|\/)chapter10\.mp3(?:[?#].*)?$/i.test(cfg.file))return {};
+ return cfg;
+}
+function playMusic(){
+ stopMusic();
+ if(!musicEnabled || (voicePlayer&&!voicePlayer.paused))return;
+ const cfg=getMusicConfig(); if(!cfg.file)return;
+ const g=musicGeneration, player=new Audio();musicPlayer=player;
+ player.preload='auto';player.loop=true;player.volume=clampVolume(cfg.volume??SITE_AUDIO_SETTINGS.musicVolume);
+ const valid=()=>g===musicGeneration&&player===musicPlayer&&musicEnabled&&getMusicConfig().file===cfg.file;
+ player.addEventListener('loadedmetadata',()=>{if(!valid())return;const offset=Math.max(0,Number(cfg.start)||0);if(offset&&Number.isFinite(player.duration)&&offset<player.duration)try{player.currentTime=offset;}catch(_){}});
+ player.addEventListener('playing',()=>{if(!valid()||(voicePlayer&&!voicePlayer.paused))player.pause();});
+ player.addEventListener('error',()=>{if(valid()){stopMusic();toast('Song unavailable for this chapter.');}});
+ player.src=cfg.file;
+ player.play().catch(err=>{if(!valid()||err.name==='AbortError')return;stopMusic();if(err.name==='NotAllowedError')toast('Tap ♫ to play the music.');else toast('Song unavailable for this chapter.');});
+}
+function resumeMusic(){if(!musicEnabled)return;const cfg=getMusicConfig();if(!cfg.file){stopMusic();return;}if(musicPlayer&&musicPlayer.getAttribute('src')===cfg.file){musicPlayer.play().catch(()=>{if(musicEnabled)toast('Tap ♫ to resume music.');});}else playMusic();}
+function resetVoiceUI(card){if(!card)return;card.el.classList.remove('is-playing');card.button.textContent='▶ Play voice message';card.progress.value=0;card.status.textContent='Tap play when you’re ready.';}
+function stopVoice(resume=false){voiceGeneration++;if(voicePlayer){voicePlayer.pause();voicePlayer.removeAttribute('src');voicePlayer.load();voicePlayer=null;}resetVoiceUI(activeVoice);activeVoice=null;if(resume)resumeMusic();}
+function refreshChapterAudio(){stopVoice(false);voiceCards.forEach(c=>{c.el.open=false;resetVoiceUI(c);});if(musicEnabled)playMusic();else stopMusic();}
+function playVoice(card){if(activeVoice===card&&voicePlayer){if(!voicePlayer.paused){voicePlayer.pause();card.button.textContent='▶ Continue listening';card.el.classList.remove('is-playing');card.status.textContent='Paused';resumeMusic();return;}if(voicePlayer.ended)voicePlayer.currentTime=0;musicPlayer?.pause();voicePlayer.play().catch(()=>{card.status.textContent='Recording unavailable. Please try again.';resumeMusic();});return;}
+ stopVoice(false);musicPlayer?.pause();const g=++voiceGeneration;const p=new Audio();voicePlayer=p;activeVoice=card;p.preload='auto';p.src=card.config.file;card.status.textContent='Opening your voice note…';card.button.textContent='Loading…';
+ const current=()=>g===voiceGeneration&&activeVoice===card;
+ const fail=()=>{if(!current())return;stopVoice(false);card.status.textContent='This recording has not been added yet.';resumeMusic();};
+ p.addEventListener('error',fail);p.addEventListener('playing',()=>{if(!current())return;musicPlayer?.pause();card.el.classList.add('is-playing');card.button.textContent='❚❚ Pause voice message';card.status.textContent='Just for you, Shivani ♡';});
+ p.addEventListener('timeupdate',()=>{if(current()&&Number.isFinite(p.duration)&&p.duration>0)card.progress.value=p.currentTime/p.duration;});
+ p.addEventListener('ended',()=>{if(!current())return;card.el.classList.remove('is-playing');card.button.textContent='↺ Replay voice message';card.status.textContent='With warmth, Kishan ♡';card.progress.value=1;resumeMusic();});
+ p.play().catch(fail);
+}
+function initAudioCards(){updateMusicButton();$('music').onclick=()=>{musicPreferenceSet=true;if(musicEnabled){musicEnabled=false;stopMusic();}else{enableMusic();playMusic();}updateMusicButton();};
+ for(const config of SITE_AUDIO_SETTINGS.voices){const mount=$(config.mount);if(!mount||!config.enabled||!config.file)continue;const el=document.createElement('details');el.className='voice-card';const summary=document.createElement('summary');const icon=document.createElement('span');icon.className='voice-icon';icon.textContent='♡';const title=document.createElement('span');title.textContent=config.title;summary.append(icon,title);const inner=document.createElement('div');inner.className='voice-inner';const wave=document.createElement('div');wave.className='voice-wave';wave.setAttribute('aria-hidden','true');for(let i=0;i<29;i++){const bar=document.createElement('i');bar.style.setProperty('--h',`${6+25*Math.abs(Math.sin(i*.61)*Math.cos(i*.17))}px`);bar.style.setProperty('--d',`${-(i%7)*.12}s`);wave.append(bar);}const button=document.createElement('button');button.type='button';button.className='voice-play';button.textContent='▶ Play voice message';const progress=document.createElement('progress');progress.className='voice-progress';progress.max=1;progress.value=0;progress.setAttribute('aria-label','Voice message progress');const status=document.createElement('p');status.className='voice-status';status.setAttribute('aria-live','polite');status.textContent='Tap play when you’re ready.';inner.append(wave,button,progress,status);el.append(summary,inner);mount.append(el);const card={el,button,progress,status,config};voiceCards.push(card);button.onclick=()=>playVoice(card);el.addEventListener('toggle',()=>{if(!el.open&&activeVoice===card)stopVoice(true);});}
+}
+
+</script>
 <script>
 /* ===========================================================
    PERSONALIZE HERE — all settings are source-code only.
@@ -170,7 +254,7 @@ $('finalFrom').textContent=CONFIG.from;
 function weddingTick(){const seconds=Math.max(0,Math.ceil((weddingTarget.getTime()-Date.now())/1000));const vals=[Math.floor(seconds/86400),Math.floor(seconds%86400/3600),Math.floor(seconds%3600/60),seconds%60];['wd','wh','wm','ws'].forEach((id,i)=>$(id).textContent=String(vals[i]).padStart(2,'0'));if(seconds===0){$('weddingLabel').textContent='Our wedding day · A new chapter';$('weddingClock').classList.add('hidden')}}
 weddingTick();setInterval(weddingTick,1000);
 // Keep the existing recording path for compatibility; only its displayed title changes.
-const bondVoice = AUDIO_SETTINGS.voices.find(v=>v.mount==='friendshipVoice');
+const bondVoice = SITE_AUDIO_SETTINGS.voices.find(v=>v.mount==='friendshipVoice');
 if(bondVoice)bondVoice.title='A little wish for our bond';
 initAudioCards();go(0);
 </script></body></html>
