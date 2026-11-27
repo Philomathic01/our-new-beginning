@@ -3,20 +3,20 @@
 // Set file: "" to use the included original instrumental instead.
 // Voice enabled: false hides that voice card. MP3 and M4A are supported by most phones.
 const AUDIO_SETTINGS = {
-  musicVolume: 0.38,
-  fallback: "assets/ambient.wav",
-  songs: [
-    { file: "songs/chapter01.mp3", start: 0, volume: 0.38 }, // 1. Welcome
-    { file: "songs/chapter02.mp3", start: 0, volume: 0.38 }, // 2. Wedding countdown
-    { file: "songs/chapter03.mp3", start: 0, volume: 0.38 }, // 3. Secret envelope
-    { file: "songs/chapter04.mp3", start: 0, volume: 0.38 }, // 4. First meeting
-    { file: "songs/chapter05.mp3", start: 0, volume: 0.38 }, // 5. Friendship question
-    { file: "songs/chapter06.mp3", start: 0, volume: 0.38 }, // 6. Heart to heart
-    { file: "songs/chapter07.mp3", start: 0, volume: 0.38}, // 7. Promises
-    { file: "songs/chapter08.mp3", start: 0, volume: 0.38 }, // 8. Future memories and bucket list
-    { file: "songs/chapter09.mp3", start: 0, volume: 0.38 }, // 9. Love letter and poetry
-    { file: "songs/chapter10.mp3", start: 0, volume: 0.38}, // 10. Grand finale
-  ],
+ musicVolume: 0.38,
+fallback: "assets/ambient.wav",
+songs: [
+    { file: "", start: 0, volume: 0.38 }, // 1
+    { file: "", start: 0, volume: 0.38 }, // 2
+    { file: "", start: 0, volume: 0.38 }, // 3
+    { file: "", start: 0, volume: 0.38 }, // 4
+    { file: "", start: 0, volume: 0.38 }, // 5
+    { file: "", start: 0, volume: 0.38 }, // 6
+    { file: "", start: 0, volume: 0.38 }, // 7
+    { file: "", start: 0, volume: 0.38 }, // 8
+    { file: "", start: 0, volume: 0.38 }, // 9
+    { file: "songs/chapter10.mp3", start: 0, volume: 0.50 }
+],
   voices: [
     { mount: "welcomeVoice", file: "voice/welcome.m4a", title: "A little hello from Kishan", enabled: true },
     { mount: "envelopeVoice", file: "voice/secret_letter.m4a", title: "A secret message inside the letter", enabled: true },
