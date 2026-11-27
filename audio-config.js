@@ -15,7 +15,7 @@ const AUDIO_SETTINGS = {
     { file: "songs/chapter07.mp3", start: 0, volume: 0.38 }, // 7. Promises
     { file: "songs/chapter08.mp3", start: 0, volume: 0.38 }, // 8. Future memories and bucket list
     { file: "songs/chapter09.mp3", start: 0, volume: 0.38 }, // 9. Love letter and poetry
-    { file: "songs/chapter10.mp3", start: 0, volume: 0.38 }, // 10. Grand finale
+    { file: "songs/Zamaana Lage (Lyrical) _ Metro…In Dino _ Anurag Basu _ Pritam _ Arijit Singh, Shashwat S _ Bhushan K.mp3", start: 0, volume: 0.38 }, // 10. Grand finale
   ],
   voices: [
     { mount: "welcomeVoice", file: "voice/welcome.m4a", title: "A little hello from Kishan", enabled: true },
